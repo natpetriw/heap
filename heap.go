@@ -4,7 +4,7 @@ const (
 	errColaVacia = "La cola esta vacia"
 )
 
-type Heap[T any] struct {
+type heap[T any] struct {
 	datos []T
 	cmp   func(T, T) int
 }
@@ -19,8 +19,10 @@ func heapify[T any](arr []T, cmp func(T, T) int) {
 	}
 }
 
-func CrearHeapArr[T any](arr []T, cmp func(T, T) int) *Heap[T] {
-	heap := &Heap[T]{datos: append([]T(nil), arr...), cmp: cmp}
+func CrearHeapArr[T any](arr []T, cmp func(T, T) int) ColaPrioridad[T] {
+	datos := make([]T, len(arr))
+	copy(datos, arr)
+	heap := &heap[T]{datos: datos, cmp: cmp}
 	heapify(heap.datos, heap.cmp)
 	return heap
 }
@@ -33,8 +35,8 @@ func HeapSort[T any](arr []T, cmp func(T, T) int) {
 	}
 }
 
-func CrearHeap[T any](cmp func(T, T) int) *Heap[T] {
-	return &Heap[T]{datos: []T{}, cmp: cmp}
+func CrearHeap[T any](cmp func(T, T) int) ColaPrioridad[T] {
+	return &heap[T]{datos: []T{}, cmp: cmp}
 }
 
 func upHeap[T any](arr []T, cmp func(T, T) int, posHijo int) {
@@ -67,23 +69,23 @@ func downHeap[T any](arr []T, cmp func(T, T) int, posPadre int) {
 	}
 }
 
-func (heap *Heap[T]) EstaVacia() bool {
+func (heap *heap[T]) EstaVacia() bool {
 	return len(heap.datos) == 0
 }
 
-func (heap *Heap[T]) Encolar(elem T) {
+func (heap *heap[T]) Encolar(elem T) {
 	heap.datos = append(heap.datos, elem)
 	upHeap(heap.datos, heap.cmp, len(heap.datos)-1)
 }
 
-func (heap *Heap[T]) VerMax() T {
+func (heap *heap[T]) VerMax() T {
 	if heap.EstaVacia() {
 		panic(errColaVacia)
 	}
 	return heap.datos[0]
 }
 
-func (heap *Heap[T]) Desencolar() T {
+func (heap *heap[T]) Desencolar() T {
 	if heap.EstaVacia() {
 		panic(errColaVacia)
 	}
@@ -95,9 +97,19 @@ func (heap *Heap[T]) Desencolar() T {
 	if !heap.EstaVacia() {
 		downHeap(heap.datos, heap.cmp, 0)
 	}
+
+	heap.achicarSlice()
 	return maximo_elemento
 }
 
-func (heap *Heap[T]) Cantidad() int {
+func (heap *heap[T]) achicarSlice() {
+	if len(heap.datos) > 0 && len(heap.datos) <= cap(heap.datos)/4 {
+		datosReducidos := make([]T, len(heap.datos))
+		copy(datosReducidos, heap.datos)
+		heap.datos = datosReducidos
+	}
+}
+
+func (heap *heap[T]) Cantidad() int {
 	return len(heap.datos)
 }

@@ -124,14 +124,20 @@ func TestHeapElementosIguales(t *testing.T) {
 
 func TestHeapGrande(t *testing.T) {
 	t.Log("Heap con gran volumen de datos")
+	const N = 10000
 	h := TDAHeap.CrearHeap(cmpEnteros)
-	for i := 500; i >= 1; i-- {
+	for i := 0; i < N; i++ {
 		h.Encolar(i)
 	}
-	require.Equal(t, 500, h.Cantidad())
-	require.EqualValues(t, 500, h.VerMax())
-	require.EqualValues(t, 500, h.Desencolar())
-	require.EqualValues(t, 499, h.VerMax())
+	require.Equal(t, N, h.Cantidad())
+	require.EqualValues(t, N-1, h.VerMax())
+
+	for i := N - 1; i >= 0; i--{
+		maximo := h.Desencolar()
+		require.EqualValues(t, i, maximo)
+
+	}
+	require.True(t, h.EstaVacia())
 }
 
 func TestOperacionesAlternadas(t *testing.T) {

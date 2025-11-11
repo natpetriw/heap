@@ -2,6 +2,7 @@ package cola_prioridad
 
 const (
 	errColaVacia = "La cola esta vacia"
+	tam_inicial = 10
 )
 
 type heap[T any] struct {
@@ -15,7 +16,7 @@ func intercambio[T any](arr []T, i, j int) {
 
 func heapify[T any](arr []T, cmp func(T, T) int) {
 	for i := (len(arr) - 2) / 2; i >= 0; i-- {
-		downHeap(arr, cmp, i)
+		downHeap(arr, cmp, i, len(arr))
 	}
 }
 
@@ -31,7 +32,7 @@ func HeapSort[T any](arr []T, cmp func(T, T) int) {
 	heapify(arr, cmp)
 	for i := len(arr) - 1; i > 0; i-- {
 		intercambio(arr, 0, i)
-		downHeap(arr[:i], cmp, 0)
+		downHeap(arr, cmp, 0, i)
 	}
 }
 
@@ -50,8 +51,8 @@ func upHeap[T any](arr []T, cmp func(T, T) int, posHijo int) {
 	}
 }
 
-func downHeap[T any](arr []T, cmp func(T, T) int, posPadre int) {
-	cant := len(arr)
+func downHeap[T any](arr []T, cmp func(T, T) int, posPadre int, limite int) {
+	cant := limite
 	posHijoIzq := 2*posPadre + 1
 	posHijoDer := 2*posPadre + 2
 	mayor := posPadre
@@ -65,7 +66,7 @@ func downHeap[T any](arr []T, cmp func(T, T) int, posPadre int) {
 
 	if mayor != posPadre {
 		intercambio(arr, posPadre, mayor)
-		downHeap(arr, cmp, mayor)
+		downHeap(arr, cmp, mayor, limite)
 	}
 }
 
@@ -74,8 +75,16 @@ func (heap *heap[T]) EstaVacia() bool {
 }
 
 func (heap *heap[T]) Encolar(elem T) {
-	heap.datos = append(heap.datos, elem)
-	upHeap(heap.datos, heap.cmp, len(heap.datos)-1)
+	n := len(heap.datos)
+	if n == cap(heap.datos){
+		nueva_capacidad := cap(heap.datos)*2 + 1
+		nueva := make([]T, n, nueva_capacidad)
+		copy(nueva, heap.datos)
+		heap.datos = nueva
+	}
+	heap.datos = heap.datos[:n+1]
+	heap.datos[n] = elem
+	upHeap(heap.datos, heap.cmp, n)
 }
 
 func (heap *heap[T]) VerMax() T {
@@ -95,18 +104,22 @@ func (heap *heap[T]) Desencolar() T {
 	heap.datos = heap.datos[:ultimo_elemento]
 
 	if !heap.EstaVacia() {
-		downHeap(heap.datos, heap.cmp, 0)
+		downHeap(heap.datos, heap.cmp, 0, len(heap.datos))
 	}
 
-	heap.achicarSlice()
+	heap.achicarCapacidad()
 	return maximo_elemento
 }
 
-func (heap *heap[T]) achicarSlice() {
-	if len(heap.datos) > 0 && len(heap.datos) <= cap(heap.datos)/4 {
-		datosReducidos := make([]T, len(heap.datos))
-		copy(datosReducidos, heap.datos)
-		heap.datos = datosReducidos
+func (heap *heap[T]) achicarCapacidad() {
+	if cap(heap.datos) > tam_inicial && len(heap.datos) <= cap(heap.datos)/4 {
+		nueva_capacidad := cap(heap.datos)/2
+		if nueva_capacidad < tam_inicial{
+			nueva_capacidad = tam_inicial
+		}
+		nuevos_datos := make([]T, len(heap.datos), nueva_capacidad)
+		copy(nuevos_datos, heap.datos)
+		heap.datos = nuevos_datos
 	}
 }
 

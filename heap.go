@@ -1,9 +1,10 @@
 package cola_prioridad
 
 const (
-	errColaVacia       = "La cola esta vacia"
-	tamInicial         = 10
-	factorAchicamiento = 4
+	errColaVacia        = "La cola esta vacia"
+	tamInicial          = 10
+	factorAchicamiento  = 4
+	factorAgrandamiento = 2
 )
 
 type heap[T any] struct {
@@ -76,16 +77,26 @@ func (heap *heap[T]) EstaVacia() bool {
 }
 
 func (heap *heap[T]) Encolar(elem T) {
+	heap.redimensionarCapacidadEncolar()
+
+	n := len(heap.datos)
+	heap.datos = heap.datos[:n+1]
+	heap.datos[n] = elem
+
+	upHeap(heap.datos, heap.cmp, n)
+}
+
+func (heap *heap[T]) redimensionarCapacidadEncolar() {
 	n := len(heap.datos)
 	if n == cap(heap.datos) {
-		nueva_capacidad := cap(heap.datos)*2 + 1
-		nueva := make([]T, n, nueva_capacidad)
+		nuevaCap := cap(heap.datos)*factorAgrandamiento + 1
+		if nuevaCap < tamInicial {
+			nuevaCap = tamInicial
+		}
+		nueva := make([]T, n, nuevaCap)
 		copy(nueva, heap.datos)
 		heap.datos = nueva
 	}
-	heap.datos = heap.datos[:n+1]
-	heap.datos[n] = elem
-	upHeap(heap.datos, heap.cmp, n)
 }
 
 func (heap *heap[T]) VerMax() T {

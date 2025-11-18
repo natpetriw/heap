@@ -2,7 +2,7 @@ package cola_prioridad
 
 const (
 	errColaVacia = "La cola esta vacia"
-	tam_inicial = 10
+	tam_inicial  = 10
 )
 
 type heap[T any] struct {
@@ -76,7 +76,7 @@ func (heap *heap[T]) EstaVacia() bool {
 
 func (heap *heap[T]) Encolar(elem T) {
 	n := len(heap.datos)
-	if n == cap(heap.datos){
+	if n == cap(heap.datos) {
 		nueva_capacidad := cap(heap.datos)*2 + 1
 		nueva := make([]T, n, nueva_capacidad)
 		copy(nueva, heap.datos)
@@ -103,18 +103,15 @@ func (heap *heap[T]) Desencolar() T {
 	heap.datos[0] = heap.datos[ultimo_elemento]
 	heap.datos = heap.datos[:ultimo_elemento]
 
-	if !heap.EstaVacia() {
-		downHeap(heap.datos, heap.cmp, 0, len(heap.datos))
-	}
-
+	downHeap(heap.datos, heap.cmp, 0, len(heap.datos))
 	heap.achicarCapacidad()
 	return maximo_elemento
 }
 
 func (heap *heap[T]) achicarCapacidad() {
 	if cap(heap.datos) > tam_inicial && len(heap.datos) <= cap(heap.datos)/4 {
-		nueva_capacidad := cap(heap.datos)/2
-		if nueva_capacidad < tam_inicial{
+		nueva_capacidad := cap(heap.datos) / 2
+		if nueva_capacidad < tam_inicial {
 			nueva_capacidad = tam_inicial
 		}
 		nuevos_datos := make([]T, len(heap.datos), nueva_capacidad)

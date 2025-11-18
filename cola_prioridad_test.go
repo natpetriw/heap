@@ -2,6 +2,7 @@ package cola_prioridad_test
 
 import (
 	"github.com/stretchr/testify/require"
+	"math/rand"
 	TDAHeap "tdas/cola_prioridad"
 	"testing"
 )
@@ -124,7 +125,7 @@ func TestHeapElementosIguales(t *testing.T) {
 
 func TestHeapGrande(t *testing.T) {
 	t.Log("Heap con gran volumen de datos")
-	const N = 10000
+	const N = 100000
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	for i := 0; i < N; i++ {
 		h.Encolar(i)
@@ -132,7 +133,7 @@ func TestHeapGrande(t *testing.T) {
 	require.Equal(t, N, h.Cantidad())
 	require.EqualValues(t, N-1, h.VerMax())
 
-	for i := N - 1; i >= 0; i--{
+	for i := N - 1; i >= 0; i-- {
 		maximo := h.Desencolar()
 		require.EqualValues(t, i, maximo)
 
@@ -140,21 +141,54 @@ func TestHeapGrande(t *testing.T) {
 	require.True(t, h.EstaVacia())
 }
 
-func TestOperacionesAlternadas(t *testing.T) {
-	t.Log("Intercala inserciones, eliminaciones y chequeos de máximo")
+func TestOperacionesAleatorias(t *testing.T) {
+	r := rand.New(rand.NewSource(0))
+
 	h := TDAHeap.CrearHeap(cmpEnteros)
-	h.Encolar(10)
-	h.Encolar(25)
-	h.Encolar(3)
-	require.EqualValues(t, 25, h.VerMax())
-	h.Desencolar()
-	h.Encolar(18)
-	h.Encolar(40)
-	require.EqualValues(t, 40, h.VerMax())
-	require.EqualValues(t, 40, h.Desencolar())
-	require.EqualValues(t, 18, h.VerMax())
-	h.Encolar(50)
-	require.EqualValues(t, 50, h.VerMax())
+	respaldo := []int{}
+
+	const N = 200
+
+	for i := 0; i < N; i++ {
+		op := r.Intn(3)
+
+		switch op {
+
+		case 0:
+			valor := r.Intn(1000)
+			h.Encolar(valor)
+			respaldo = append(respaldo, valor)
+
+		case 1:
+			if len(respaldo) == 0 {
+				require.True(t, h.EstaVacia())
+			} else {
+				maxReal := respaldo[0]
+				for _, v := range respaldo {
+					if v > maxReal {
+						maxReal = v
+					}
+				}
+				require.EqualValues(t, maxReal, h.VerMax())
+			}
+
+		case 2:
+			if len(respaldo) == 0 {
+				require.True(t, h.EstaVacia())
+			} else {
+				maxIdx := 0
+				for idx, v := range respaldo {
+					if v > respaldo[maxIdx] {
+						maxIdx = idx
+					}
+				}
+				maxReal := respaldo[maxIdx]
+				require.EqualValues(t, maxReal, h.Desencolar())
+				respaldo[maxIdx] = respaldo[len(respaldo)-1]
+				respaldo = respaldo[:len(respaldo)-1]
+			}
+		}
+	}
 }
 
 func TestHeapAleatorio(t *testing.T) {

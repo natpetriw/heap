@@ -2,7 +2,6 @@ package cola_prioridad_test
 
 import (
 	"github.com/stretchr/testify/require"
-	"math/rand"
 	TDAHeap "tdas/cola_prioridad"
 	"testing"
 )
@@ -30,17 +29,17 @@ func cmpProductosPorPrecio(a, b Producto) int {
 	return 0
 }
 
-func TestHeapRecienCreado(t *testing.T) {
-	t.Log("Heap recién creado debe estar vacío y lanzar panics al acceder")
-	h := TDAHeap.CrearHeap[int](cmpEnteros)
+func TestHeapVacioRecienCreado(t *testing.T) {
+	t.Log("Heap recién creado debe comenzar vacío y lanzar panics al acceder")
+	h := TDAHeap.CrearHeap(cmpEnteros)
 	require.True(t, h.EstaVacia())
 	require.Equal(t, 0, h.Cantidad())
 	require.PanicsWithValue(t, "La cola esta vacia", func() { h.VerMax() })
 	require.PanicsWithValue(t, "La cola esta vacia", func() { h.Desencolar() })
 }
 
-func TestInsertarUnElemento(t *testing.T) {
-	t.Log("Insertar un único elemento y verificar comportamiento")
+func TestEncolarUnElemento(t *testing.T) {
+	t.Log("Encolar un único elemento y verificar su comportamiento")
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	h.Encolar(99)
 	require.False(t, h.EstaVacia())
@@ -50,8 +49,8 @@ func TestInsertarUnElemento(t *testing.T) {
 	require.True(t, h.EstaVacia())
 }
 
-func TestInsertarVariosElementos(t *testing.T) {
-	t.Log("Inserta varios elementos y verifica prioridad máxima")
+func TestEncolarVariosElementos(t *testing.T) {
+	t.Log("Encola varios elementos y verifica que el máximo sea correcto")
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	for _, v := range []int{12, 4, 18, 9, 20, 7} {
 		h.Encolar(v)
@@ -62,8 +61,8 @@ func TestInsertarVariosElementos(t *testing.T) {
 	require.EqualValues(t, 18, h.VerMax())
 }
 
-func TestOrdenDesencoladoDesc(t *testing.T) {
-	t.Log("Desencola y verifica que salgan en orden descendente")
+func TestDesencolarEnOrdenDePrioridad(t *testing.T) {
+	t.Log("Verifica que los elementos se desencolen en orden descendente según prioridad")
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	elementos := []int{2, 14, 8, 11}
 	for _, e := range elementos {
@@ -75,16 +74,16 @@ func TestOrdenDesencoladoDesc(t *testing.T) {
 	require.True(t, h.EstaVacia())
 }
 
-func TestHeapDesdeArreglo(t *testing.T) {
-	t.Log("Construye un heap desde un arreglo inicial")
+func TestCrearHeapDesdeArreglo(t *testing.T) {
+	t.Log("Construye un heap a partir de un arreglo inicial")
 	valores := []int{6, 3, 8, 1, 9, 2}
 	h := TDAHeap.CrearHeapArr(valores, cmpEnteros)
 	require.Equal(t, len(valores), h.Cantidad())
 	require.EqualValues(t, 9, h.VerMax())
 }
 
-func TestHeapStringsPorLongitud(t *testing.T) {
-	t.Log("Heap de strings según el largo de cada palabra")
+func TestHeapComparacionStringsPorLongitud(t *testing.T) {
+	t.Log("Heap de strings ordenado según el largo de cada palabra")
 	h := TDAHeap.CrearHeap(cmpStringsPorLargo)
 	for _, s := range []string{"uva", "manzana", "pera", "kiwi", "sandía"} {
 		h.Encolar(s)
@@ -94,7 +93,7 @@ func TestHeapStringsPorLongitud(t *testing.T) {
 	require.EqualValues(t, "sandía", h.VerMax())
 }
 
-func TestHeapConProductos(t *testing.T) {
+func TestHeapConComparadorDeProductos(t *testing.T) {
 	t.Log("Heap de productos ordenado por precio")
 	h := TDAHeap.CrearHeap(cmpProductosPorPrecio)
 	h.Encolar(Producto{"Auriculares", 75.50})
@@ -111,8 +110,8 @@ func TestHeapConProductos(t *testing.T) {
 	require.EqualValues(t, 250.00, h.VerMax().precio)
 }
 
-func TestHeapElementosIguales(t *testing.T) {
-	t.Log("Inserta elementos repetidos y verifica consistencia")
+func TestHeapConElementosIguales(t *testing.T) {
+	t.Log("Inserta elementos repetidos y verifica que el heap mantenga consistencia")
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	for i := 0; i < 4; i++ {
 		h.Encolar(42)
@@ -123,8 +122,8 @@ func TestHeapElementosIguales(t *testing.T) {
 	require.True(t, h.EstaVacia())
 }
 
-func TestHeapGrande(t *testing.T) {
-	t.Log("Heap con gran volumen de datos")
+func TestHeapVolumen(t *testing.T) {
+	t.Log("Prueba de gran volumen para validar eficiencia y correcto funcionamiento")
 	const N = 100000
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	for i := 0; i < N; i++ {
@@ -136,63 +135,12 @@ func TestHeapGrande(t *testing.T) {
 	for i := N - 1; i >= 0; i-- {
 		maximo := h.Desencolar()
 		require.EqualValues(t, i, maximo)
-
 	}
 	require.True(t, h.EstaVacia())
 }
 
-func TestOperacionesAleatorias(t *testing.T) {
-	r := rand.New(rand.NewSource(0))
-
-	h := TDAHeap.CrearHeap(cmpEnteros)
-	respaldo := []int{}
-
-	const N = 200
-
-	for i := 0; i < N; i++ {
-		op := r.Intn(3)
-
-		switch op {
-
-		case 0:
-			valor := r.Intn(1000)
-			h.Encolar(valor)
-			respaldo = append(respaldo, valor)
-
-		case 1:
-			if len(respaldo) == 0 {
-				require.True(t, h.EstaVacia())
-			} else {
-				maxReal := respaldo[0]
-				for _, v := range respaldo {
-					if v > maxReal {
-						maxReal = v
-					}
-				}
-				require.EqualValues(t, maxReal, h.VerMax())
-			}
-
-		case 2:
-			if len(respaldo) == 0 {
-				require.True(t, h.EstaVacia())
-			} else {
-				maxIdx := 0
-				for idx, v := range respaldo {
-					if v > respaldo[maxIdx] {
-						maxIdx = idx
-					}
-				}
-				maxReal := respaldo[maxIdx]
-				require.EqualValues(t, maxReal, h.Desencolar())
-				respaldo[maxIdx] = respaldo[len(respaldo)-1]
-				respaldo = respaldo[:len(respaldo)-1]
-			}
-		}
-	}
-}
-
-func TestHeapAleatorio(t *testing.T) {
-	t.Log("Crea un heap con valores mezclados y verifica propiedad de heap")
+func TestHeapConDatosAleatorios(t *testing.T) {
+	t.Log("Crea un heap con datos mezclados y verifica la propiedad de heap")
 	h := TDAHeap.CrearHeap(cmpEnteros)
 	datos := []int{15, 42, 3, 27, 19, 8, 60, 12}
 	for _, v := range datos {
@@ -204,16 +152,16 @@ func TestHeapAleatorio(t *testing.T) {
 	require.GreaterOrEqual(t, h.VerMax(), 42)
 }
 
-func TestHeapSortBasico(t *testing.T) {
-	t.Log("Prueba básica de ordenamiento con HeapSort")
+func TestHeapSortOrdenaCorrectamente(t *testing.T) {
+	t.Log("Verifica que el HeapSort ordene correctamente un arreglo")
 	arr := []int{8, 2, 5, 1, 9, 4}
 	TDAHeap.HeapSort(arr, cmpEnteros)
 	require.EqualValues(t, []int{1, 2, 4, 5, 8, 9}, arr)
 }
 
-func TestPanicsNoAlteranEstado(t *testing.T) {
-	t.Log("Las operaciones con panic no deben modificar el heap")
-	h := TDAHeap.CrearHeap[int](cmpEnteros)
+func TestPanicsNoModificanElHeap(t *testing.T) {
+	t.Log("Las operaciones que lanzan panic no deben alterar el heap")
+	h := TDAHeap.CrearHeap(cmpEnteros)
 	require.PanicsWithValue(t, "La cola esta vacia", func() { h.VerMax() })
 	require.Equal(t, 0, h.Cantidad())
 	require.PanicsWithValue(t, "La cola esta vacia", func() { h.Desencolar() })

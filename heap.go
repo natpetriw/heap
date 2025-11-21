@@ -9,6 +9,7 @@ const (
 
 type heap[T any] struct {
 	datos []T
+	cant  int
 	cmp   func(T, T) int
 }
 
@@ -25,9 +26,9 @@ func heapify[T any](arr []T, cmp func(T, T) int) {
 func CrearHeapArr[T any](arr []T, cmp func(T, T) int) ColaPrioridad[T] {
 	datos := make([]T, len(arr))
 	copy(datos, arr)
-	heap := &heap[T]{datos: datos, cmp: cmp}
-	heapify(heap.datos, heap.cmp)
-	return heap
+	h := &heap[T]{datos: datos, cant: len(arr), cmp: cmp}
+	heapify(h.datos, h.cmp)
+	return h
 }
 
 func HeapSort[T any](arr []T, cmp func(T, T) int) {
@@ -39,7 +40,7 @@ func HeapSort[T any](arr []T, cmp func(T, T) int) {
 }
 
 func CrearHeap[T any](cmp func(T, T) int) ColaPrioridad[T] {
-	return &heap[T]{datos: []T{}, cmp: cmp}
+	return &heap[T]{datos: make([]T, 0, tamInicial), cant: 0, cmp: cmp}
 }
 
 func upHeap[T any](arr []T, cmp func(T, T) int, posHijo int) {
@@ -73,30 +74,43 @@ func downHeap[T any](arr []T, cmp func(T, T) int, posPadre int, limite int) {
 }
 
 func (heap *heap[T]) EstaVacia() bool {
-	return len(heap.datos) == 0
+	return heap.cant == 0
 }
 
-func (heap *heap[T]) Encolar(elem T) {
-	heap.redimensionarCapacidadEncolar()
-
-	n := len(heap.datos)
-	heap.datos = heap.datos[:n+1]
-	heap.datos[n] = elem
-
-	upHeap(heap.datos, heap.cmp, n)
-}
-
-func (heap *heap[T]) redimensionarCapacidadEncolar() {
-	n := len(heap.datos)
-	if n == cap(heap.datos) {
-		nuevaCap := cap(heap.datos)*factorAgrandamiento + 1
+func (heap *heap[T]) redimensionarHeap() {
+	if heap.cant == cap(heap.datos) {
+		nuevaCap := cap(heap.datos) * factorAgrandamiento
 		if nuevaCap < tamInicial {
 			nuevaCap = tamInicial
 		}
-		nueva := make([]T, n, nuevaCap)
+		nueva := make([]T, heap.cant, nuevaCap)
 		copy(nueva, heap.datos)
 		heap.datos = nueva
+		return
 	}
+
+	if cap(heap.datos) > tamInicial && heap.cant <= cap(heap.datos)/factorAchicamiento {
+		nuevaCap := cap(heap.datos) / factorAchicamiento
+		if nuevaCap < tamInicial {
+			nuevaCap = tamInicial
+		}
+		nueva := make([]T, heap.cant, nuevaCap)
+		copy(nueva, heap.datos)
+		heap.datos = nueva
+		return
+	}
+}
+
+func (heap *heap[T]) Encolar(elem T) {
+	heap.redimensionarHeap()
+
+	if heap.cant < len(heap.datos) {
+		heap.datos[heap.cant] = elem
+	} else {
+		heap.datos = append(heap.datos, elem)
+	}
+	upHeap(heap.datos, heap.cmp, heap.cant)
+	heap.cant++
 }
 
 func (heap *heap[T]) VerMax() T {
@@ -110,28 +124,18 @@ func (heap *heap[T]) Desencolar() T {
 	if heap.EstaVacia() {
 		panic(errColaVacia)
 	}
-	maximo_elemento := heap.VerMax()
-	ultimo_elemento := len(heap.datos) - 1
-	heap.datos[0] = heap.datos[ultimo_elemento]
-	heap.datos = heap.datos[:ultimo_elemento]
+	maximo := heap.datos[0]
+	ultimo := heap.cant - 1
+	heap.datos[0] = heap.datos[ultimo]
 
-	downHeap(heap.datos, heap.cmp, 0, len(heap.datos))
-	heap.reducirCapacidad()
-	return maximo_elemento
-}
+	heap.cant--
+	heap.datos = heap.datos[:heap.cant]
 
-func (heap *heap[T]) reducirCapacidad() {
-	if cap(heap.datos) > tamInicial && len(heap.datos) <= cap(heap.datos)/factorAchicamiento {
-		nueva_capacidad := cap(heap.datos) / 2
-		if nueva_capacidad < tamInicial {
-			nueva_capacidad = tamInicial
-		}
-		nuevos_datos := make([]T, len(heap.datos), nueva_capacidad)
-		copy(nuevos_datos, heap.datos)
-		heap.datos = nuevos_datos
-	}
+	downHeap(heap.datos, heap.cmp, 0, heap.cant)
+	heap.redimensionarHeap()
+	return maximo
 }
 
 func (heap *heap[T]) Cantidad() int {
-	return len(heap.datos)
+	return heap.cant
 }
